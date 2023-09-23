@@ -1,6 +1,5 @@
 const express = require('express');
 const fs = require('fs');
-const path = require('path');
 
 const app = express();
 const PORT = 3001;
@@ -9,8 +8,13 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
-// Routes
-app.get('/notes', (req, res) => {
-    res.sendFile(path.join(__dirname, 'public', 'notes.html'));
-  });
-  
+// require route handlers
+const notesRoutes = require('./routes/notesRoutes');
+const indexRoutes = require('./routes/indexRoutes');
+
+app.use('/', indexRoutes);
+app.use('/notes', notesRoutes);
+
+app.listen(PORT, () => {
+    console.log(`Server is running on http://localhost:${PORT}`);
+});
