@@ -10,9 +10,9 @@ app.use(express.static('public'));
 
 // require route handlers
 const notesRoutes = require('./routes/notesRoutes');
-const indexRoutes = require('./routes/indexRoutes');
+const htmlRoutes = require('./routes/htmlRoutes');
 
-app.use('/', indexRoutes);
+app.use('/', htmlRoutes);
 app.use('/notes', notesRoutes);
 
 app.listen(PORT, () => {
