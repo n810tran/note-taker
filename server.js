@@ -3,18 +3,20 @@ const express = require('express');
 const path = require('path');
 const fs = require('fs');
 
-//define port
+// Define port
 const PORT = process.env.PORT || 3001;
 
-// middleware
+// Initialize middleware
 const app = express();
 
+// Middleware for parsing JSON and URL encoded data
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// serve static files from the public folder
+// Serve static files from the public folder
 app.use(express.static('public'));
 
+// Serve index.html file
 app.get('/', (req, res) => {
     res.sendFile(path.join(__dirname, 'public/index.html'))
 })
@@ -23,11 +25,11 @@ app.get('/', (req, res) => {
 // GET /api/notes should read the db.json file and return all saved notes as JSON
 app.get('/api/notes', async (req, res) => {
     try {
-        console.info(`${req.method} request received to get notes`);
-
+        // Read the db.json file and parse the data
         const savedNote = await fs.readFileSync('./db/db.json', 'utf8');
         const savedNoteParse = JSON.parse(savedNote);
-        console.log(savedNote, savedNoteParse);
+
+        // Return the parsed data as JSON
         return res.json(savedNoteParse);
     } catch (err) {
         return res.status(500).json(err);
@@ -35,32 +37,32 @@ app.get('/api/notes', async (req, res) => {
 })
 
 // POST /api/notes should receive a new note to save on the request body, add it to the db.json file and then return the new note to the client
-// give each note a unique id when it's saved from uuid npm package
+// Give each note a unique id when it's saved from uuid npm package
 app.post('/api/notes', async (req, res) => {
     try {
-        // Log that a POST request was recieved
-        console.info(`${req.method} request received to add a note`);
-
-        // Destructuring assignment for the items in req.body
+        // Destructure the items in req.body
         const { title, text } = req.body;
-        // Check to see if required note properties are pressent
+
+        // Check to see if required note properties are present
         if (title && text) {
             const newNote = {
                 title,
                 text,
                 id: uuid(),
             };
-            // obtain existing notes
+
+            // Obtain existing notes
             const data = await fs.readFileSync('./db/db.json', 'utf8');
             const dataArray = JSON.parse(data);
-            // push new note
-            dataArray.push(newNote);
-            // stringify notes array
-            const noteString = JSON.stringify(dataArray, null, 2);
-            // once stringified, write note string to db.json
-            await fs.writeFileSync('./db/db.json', noteString);
 
-            console.info(`Note for ${newNote.title} has been written to JSON file`)
+            // Push new note
+            dataArray.push(newNote);
+
+            // Stringify notes array
+            const noteString = JSON.stringify(dataArray, null, 2);
+
+            // Write note string to db.json
+            await fs.writeFileSync('./db/db.json', noteString);
 
             const response = {
                 status: 'success',
@@ -80,22 +82,19 @@ app.post('/api/notes', async (req, res) => {
 // DELETE /api/notes/:id should receive a query parameter containing the id of a note to delete. 
 app.delete('/api/notes/:id', async (req, res) => {
     try {
-        console.info(`${req.method} request received to delete note`);
-        
         // In order to delete a note, you'll need to read all notes from the db.json file
         const savedNotes = await fs.readFileSync('./db/db.json', 'utf8');
         const savedNotesParse = JSON.parse(savedNotes);
-        // get the id of the note to delete from the request parameters
-        // req.params.id (to get the id dynamically)
+
+        // Get the id of the note to delete from the request parameters
         const deletedID = req.params.id;
-        // use filter
+
+        // Use filter to remove the note with the given id property
         const updatedNotes = savedNotesParse.filter(note => note.id !== deletedID);
-        // remove the note with the given id property
-        // then rewrite the notes to the db.json file
+
+        // Stringify the updated notes array and write it to the db.json file
         const updatedNoteString = JSON.stringify(updatedNotes, null, 2);
         await fs.writeFileSync('./db/db.json', updatedNoteString);
-
-        console.info(`Note with id ${deletedID} has been deleted`);
 
         return res.json(updatedNotes);
     } catch (err) {
